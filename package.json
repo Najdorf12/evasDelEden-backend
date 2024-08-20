@@ -1,0 +1,19 @@
+{
+  "name": "evas-backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Najdorf12/evasDelEden.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Najdorf12/evasDelEden/issues"
+  },
+  "homepage": "https://github.com/Najdorf12/evasDelEden#readme",
+  "description": ""
+}
