@@ -3,7 +3,7 @@ import 'dotenv/config.js'
 
 
 export const authRequired = (req, res, next) => {
-  const TOKEN_SECRET = process.env.TOKEN_SECRET;
+  const TOKEN_SECRET = `${process.env.TOKEN_SECRET}`;
 
   const { token } = req.cookies;
   if (!token) return res.status(401).json({ message: "No token" });

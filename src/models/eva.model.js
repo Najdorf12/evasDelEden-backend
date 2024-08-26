@@ -9,6 +9,9 @@ const evaSchema = new Schema(
     location: {
       type: String,
     },
+    age: {
+      type: String,
+    },
     isActive: {
       type: Boolean,
     },
