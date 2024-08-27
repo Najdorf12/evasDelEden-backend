@@ -1,4 +1,5 @@
 import Eva from "../models/eva.model.js";
+import { deleteImage } from "../libs/cloudinary.js";
 
 export const getEvas = async (req, res) => {
   try {
