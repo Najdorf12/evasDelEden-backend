@@ -7,8 +7,8 @@ import authRoutes from "./routes/auth.routes.js";
 import evasRoutes from "./routes/evas.routes.js";
 
 const app = express();
-app.use(cors({/*  http://localhost:5173  https://www.grupolacomunidad.com.ar*/
-    origin:"http://localhost:5173",
+app.use(cors({/*  http://localhost:5173  https://evas-del-eden-frontend.vercel.app */
+    origin:"https://evas-del-eden-frontend.vercel.app",
     credentials: true,
 }));
 
