@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import "dotenv/config.js";
 
-const MONGO = `${process.env.MONGO}`;
 export const connectDB = async () => {
+const MONGO = `${process.env.MONGO}`;
   try {
     await mongoose.connect(MONGO)
     console.log("Conexion a mongo exitosa")
