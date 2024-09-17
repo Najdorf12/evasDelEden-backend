@@ -9,9 +9,6 @@ const evaSchema = new Schema(
     location: {
       type: String,
     },
-    age: {
-      type: String,
-    },
     isActive: {
       type: Boolean,
     },
@@ -23,9 +20,14 @@ const evaSchema = new Schema(
       unique: true,
     },
     description: {
-      detail: { type: String },
+      edad: { type: String },
+      altura: { type: String },
+      peso: { type: String },
       medidas: { type: String },
-      more: { type: String },
+      depilacion: { type: String },
+      servicio: { type: String },
+      horario: { type: String },
+      extendDescription : { type : String},
     },
     images: [
       {

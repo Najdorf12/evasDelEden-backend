@@ -12,14 +12,13 @@ export const getEvas = async (req, res) => {
 };
 
 export const createEva = async (req, res) => {
-  const { name, location, age, isActive, category, wttp, description, images } =
+  const { name, location, isActive, category, wttp, description, images } =
     req.body;
 
   try {
     const newEva = new Eva({
       name,
       location,
-      age,
       isActive,
       category,
       wttp,
