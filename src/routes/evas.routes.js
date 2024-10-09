@@ -12,7 +12,7 @@ import {
 
 const router = Router();
 
-router.get("/categories", getEvasByCategoryFilter);  // Coloca las rutas específicas primero
+router.get("/evas", getEvasByCategoryFilter);
 router.get("/category/:categoryName", getEvasByCategory);
 router.get("/location/:locationName", getEvaByLocation);
 

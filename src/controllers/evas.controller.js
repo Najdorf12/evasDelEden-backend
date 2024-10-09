@@ -118,12 +118,23 @@ export const getEvaByLocation = async (req, res) => {
 };
 
 export const getEvasByCategoryFilter = async (req, res) => {
+  const { location } = req.query; // Obtiene la ubicación desde el query params
+
+  // Definir las ubicaciones válidas
+  const validLocations = ["Mendoza", "Cordoba", "Buenos Aires", "Santa Fe"];
+
   try {
-    // Agrupamos las evas por categoría con aggregate
+    // Verificar si la ubicación es válida
+    if (!validLocations.includes(location)) {
+      return res.status(400).json({ message: "Invalid location" });
+    }
+
+    // Agrupamos las evas por categoría y filtramos por ubicación
     const evasByCategory = await Eva.aggregate([
       {
         $match: {
-          category: { $in: ["Platinum", "Gold", "Silver"] } // Filtra por estas categorías
+          category: { $in: ["Platinum", "Gold", "Silver"] }, // Filtra por estas categorías
+          location: location // Filtra por la ubicación proporcionada
         }
       },
       {
@@ -138,7 +149,7 @@ export const getEvasByCategoryFilter = async (req, res) => {
       return res.status(404).json({ message: "No evas found" });
     }
 
-    res.json(evasByCategory); // Devolvemos las evas agrupadas por categoría
+    res.json(evasByCategory);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: error.message });
