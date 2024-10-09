@@ -85,7 +85,7 @@ export const updateEva = async (req, res) => {
   }
 };
 
-export const getEvaByCategory = async (req, res) => {
+export const getEvasByCategory = async (req, res) => {
   const category = req.params.categoryName;
   try {
     // Filtrar directamente en la consulta de MongoDB
@@ -111,6 +111,34 @@ export const getEvaByLocation = async (req, res) => {
       return res.status(404).json({ message: "GetEvasByLocation not found" });
     }
     res.json(evas);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const getEvasByCategoryFilter = async (req, res) => {
+  try {
+    // Agrupamos las evas por categoría con aggregate
+    const evasByCategory = await Eva.aggregate([
+      {
+        $match: {
+          category: { $in: ["Platinum", "Gold", "Silver"] } // Filtra por estas categorías
+        }
+      },
+      {
+        $group: {
+          _id: "$category", // Agrupa por el campo "category"
+          evas: { $push: "$$ROOT" } // Inserta todas las evas de esa categoría
+        }
+      }
+    ]);
+
+    if (!evasByCategory.length) {
+      return res.status(404).json({ message: "No evas found" });
+    }
+
+    res.json(evasByCategory); // Devolvemos las evas agrupadas por categoría
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: error.message });

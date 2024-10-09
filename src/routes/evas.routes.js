@@ -5,20 +5,22 @@ import {
   deleteEva,
   getEva,
   updateEva,
-  getEvaByCategory,
+  getEvasByCategory,
+  getEvasByCategoryFilter,
   getEvaByLocation
 } from "../controllers/evas.controller.js";
 
 const router = Router();
 
+router.get("/categories", getEvasByCategoryFilter);  // Coloca las rutas específicas primero
+router.get("/category/:categoryName", getEvasByCategory);
+router.get("/location/:locationName", getEvaByLocation);
+
 router.get("/", getEvas);
 router.post("/", createEva);
 
-router.get("/:id", getEva);
+router.get("/:id", getEva);  // Rutas dinámicas al final
 router.delete("/:id", deleteEva);
 router.put("/:id", updateEva);
-
-router.get("/category/:categoryName", getEvaByCategory)
-router.get("/location/:locationName", getEvaByLocation)
 
 export default router;
