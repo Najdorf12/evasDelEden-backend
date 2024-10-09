@@ -121,7 +121,7 @@ export const getEvasByCategoryFilter = async (req, res) => {
   const { location } = req.query; // Obtiene la ubicación desde el query params
 
   // Definir las ubicaciones válidas
-  const validLocations = ["Mendoza", "Cordoba", "BuenosAires", "SantaFe"];
+  const validLocations = ["Mendoza", "Cordoba", "Buenos Aires", "Santa Fe"];
 
   try {
     // Verificar si la ubicación es válida
