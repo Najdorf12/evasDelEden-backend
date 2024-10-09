@@ -6,6 +6,7 @@ import {
   getEva,
   updateEva,
   getEvaByCategory,
+  getEvaByLocation
 } from "../controllers/evas.controller.js";
 
 const router = Router();
@@ -18,5 +19,6 @@ router.delete("/:id", deleteEva);
 router.put("/:id", updateEva);
 
 router.get("/category/:categoryName", getEvaByCategory)
+router.get("/location/:locationName", getEvaByLocation)
 
 export default router;

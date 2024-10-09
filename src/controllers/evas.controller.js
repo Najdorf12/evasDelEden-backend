@@ -88,11 +88,29 @@ export const updateEva = async (req, res) => {
 export const getEvaByCategory = async (req, res) => {
   const category = req.params.categoryName;
   try {
-    const evas = await Eva.find();
-    const evasFilter = evas.filter((eva) => eva.category === category);
-    if (!evasFilter) return res.status(404).json({ message: "Evas not found" });
+    // Filtrar directamente en la consulta de MongoDB
+    const evas = await Eva.find({ category });
+    
+    if (!evas.length) {
+      return res.status(404).json({ message: "GetEvasByCategory not found" });
+    }
+    res.json(evas);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
 
-    res.json(evasFilter);
+export const getEvaByLocation = async (req, res) => {
+  const location = req.params.locationName;
+  try {
+    // Filtrar directamente en la consulta de MongoDB
+    const evas = await Eva.find({ location });
+    
+    if (!evas.length) {
+      return res.status(404).json({ message: "GetEvasByLocation not found" });
+    }
+    res.json(evas);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: error.message });
