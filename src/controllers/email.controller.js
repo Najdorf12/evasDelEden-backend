@@ -5,17 +5,17 @@ const resend = new Resend('re_gcgSBD6n_NHfcokuaS34gDp7Rc4bm2yKp');  // Reemplaza
 
 // Controlador para manejar el envío de correos
 export const sendEmail = async (req, res) => {
-  const { email, whatsapp, message } = req.body;
+  const { email, wttp , message } = req.body;
 
   try {
     const { data, error } = await resend.emails.send({
       from: 'TuEmpresa <info@tuempresa.com>',  // Correo remitente
-      to: ['destinatario@correo.com'], // Correo destinatario
+      to: ['agustin.morro@gmail.com'], // Correo destinatario
       subject: `Consulta de ${email}`,
       html: `
         <h1>Detalles del contacto</h1>
         <p><strong>Email:</strong> ${email}</p>
-        <p><strong>WhatsApp:</strong> ${whatsapp}</p>
+        <p><strong>WhatsApp:</strong> ${wttp}</p>
         <p><strong>Mensaje:</strong> ${message}</p>
       `,
     });
