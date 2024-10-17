@@ -5,9 +5,10 @@ import cors from "cors";
 
 import authRoutes from "./routes/auth.routes.js";
 import evasRoutes from "./routes/evas.routes.js";
+import emailRoutes from "./routes/email.routes.js"; 
 
 const app = express();
-app.use(cors({/*  http://localhost:5173 https://evas-del-eden-frontend.vercel.app */
+app.use(cors({/* http://localhost:5173 https://evas-del-eden-frontend.vercel.app */
     origin:"https://evas-del-eden-frontend.vercel.app",
     credentials: true,
 }));
@@ -19,7 +20,7 @@ app.use(cookieParser());
 
 app.use("/api/evas", evasRoutes );
 app.use("/api/auth", authRoutes);
-
+app.use("/api/email", emailRoutes); 
 
 
 export default app;
