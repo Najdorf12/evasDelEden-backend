@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 
 // Inicializa Resend con tu API key
-const resend = new Resend('tu_api_key_resend');  // Reemplaza con tu clave de API
+const resend = new Resend('re_gcgSBD6n_NHfcokuaS34gDp7Rc4bm2yKp');  // Reemplaza con tu clave de API
 
 // Controlador para manejar el envío de correos
 export const sendEmail = async (req, res) => {
