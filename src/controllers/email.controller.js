@@ -10,13 +10,13 @@ export const sendEmail = async (req, res) => {
   try {
     const { data, error } = await resend.emails.send({
       from: "Acme <onboarding@resend.dev>", // Correo remitente
-      to: ["agustin.morro@gmail.com"], // Correo destinatario
+      to: ["evaseden@protonmail.com"], // Correo destinatario
       subject: `Consulta de ${email}.`,
       html: `
         <h1>Detalles del contacto</h1>
-        <h3><strong>Email:</strong> ${email}</h3>
-        <h3><strong>WhatsApp:</strong> ${wttp}</h3>
-        <h3><strong>Mensaje:</strong> ${message}</h3>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>WhatsApp:</strong> ${wttp}</p>
+        <p><strong>Mensaje:</strong> ${message}</p>
       `,
     });
 
