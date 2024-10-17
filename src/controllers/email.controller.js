@@ -9,7 +9,7 @@ export const sendEmail = async (req, res) => {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: "Agustin Morro <agustin.morro@gmail.com>", // Correo remitente
+      from: "Acme <onboarding@resend.dev>", // Correo remitente
       to: ["evaseden@protonmail.com"], // Correo destinatario
       subject: `Consulta de ${email}.`,
       html: `
