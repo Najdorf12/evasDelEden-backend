@@ -35,6 +35,12 @@ const evaSchema = new Schema(
         secure_url: { type: String },
       },
     ],
+    videos: [
+      {
+        public_id: { type: String },
+        secure_url: { type: String },
+      },
+    ],
     date: {
       type: Date,
       default: Date.now,

@@ -12,7 +12,7 @@ export const getEvas = async (req, res) => {
 };
 
 export const createEva = async (req, res) => {
-  const { name, location, isActive, category, wttp, description, images } =
+  const { name, location, isActive, category, wttp, description, images, videos} =
     req.body;
 
   try {
@@ -24,6 +24,7 @@ export const createEva = async (req, res) => {
       wttp,
       description,
       images,
+      videos
     });
 
     const savedEva = await newEva.save();
