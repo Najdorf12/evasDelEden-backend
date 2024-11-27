@@ -9,7 +9,7 @@ import emailRoutes from "./routes/email.routes.js";
 
 const app = express();
 app.use(cors({/* http://localhost:5173 https://evas-del-eden-frontend.vercel.app */
-    origin:"https://evas-del-eden-frontend.vercel.app",
+    origin:"https://www.evasdeleden.com",
     credentials: true,
 }));
 
