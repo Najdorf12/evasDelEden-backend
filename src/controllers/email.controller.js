@@ -18,7 +18,7 @@ export const sendEmail = async (req, res) => {
   try {
     await transporter.sendMail({
       from: `"Evas del Eden"<${EMAIL_USER}>`,
-      to: "agustin.morro@gmail.com",
+      to: "evaseden@protonmail.com",
       subject: `Consulta de ${email} / EVAS DEL EDEN /`,
       html: `
         <h1>Detalles del contacto:</h1>
