@@ -16,14 +16,14 @@ export const sendEmail = async(req, res) =>  {
 
   try {
     await transporter.sendMail({
-      from: `"Evas del Eden" <${EMAIL_USER}>`,
+      from: `"Evas del Eden"<${EMAIL_USER}>`,
       to: "agustin.morro@gmail.com",
       subject: `Consulta de ${email} / EVAS DEL EDEN /`,
       html: `
-                <h1>Detalles del contacto :</h1>
-                <p><strong>Email : </strong> ${email}</p>
-                <p><strong>WhatsApp : </strong> ${wttp}</p>
-                <p><strong>Mensaje : </strong> ${message}</p>
+                <h1>Detalles del contacto:</h1>
+                <p><strong>Email:</strong>${email}</p>
+                <p><strong>WhatsApp:</strong>${wttp}</p>
+                <p><strong>Mensaje:</strong>${message}</p>
             `,
     });
 
