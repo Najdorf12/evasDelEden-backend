@@ -1,29 +1,38 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-const resend = new Resend("re_gcgSBD6n_NHfcokuaS34gDp7Rc4bm2yKp"); 
+const EMAIL_USER = "agustin.morro@gmail.com";
+const EMAIL_PASS = "cmvv kval drio fuzb";
 
-export const sendEmail = async (req, res) => {
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+      user: EMAIL_USER, 
+      pass: EMAIL_PASS 
+  }
+});
+
+export const sendEmail = async(req, res) =>  {
   const { email, wttp, message } = req.body;
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: "Acme <onboarding@resend.dev>", 
-      to: ["evaseden@protonmail.com"], 
-      subject: `Consulta de ${email}.`,
+    await transporter.sendMail({
+      from: `"Evas del Eden" <${EMAIL_USER}>`,
+      to: "agustin.morro@gmail.com",
+      subject: `Consulta de ${email} / EVAS DEL EDEN /`,
       html: `
-        <h1>Detalles del contacto</h1>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>WhatsApp:</strong> ${wttp}</p>
-        <p><strong>Mensaje:</strong> ${message}</p>
-      `,
+                <h1>Detalles del contacto :</h1>
+                <p><strong>Email : </strong> ${email}</p>
+                <p><strong>WhatsApp : </strong> ${wttp}</p>
+                <p><strong>Mensaje : </strong> ${message}</p>
+            `,
     });
 
-    if (error) {
-      return res.status(500).json({ error: "Error al enviar el correo" });
-    }
-    res.status(200).json({ message: "Correo enviado exitosamente", data });
+    res.status(200).json({ message: "Correo enviado exitosamente" });
   } catch (err) {
     console.error("Error en el controlador:", err);
-    res.status(500).json({ error: "Error interno del servidor" });
+    res.status(500).json({ error: "Error al enviar el correo" });
   }
-};
+}
+
+
+

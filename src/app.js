@@ -27,6 +27,6 @@ app.use(cookieParser());
 
 app.use("/api/evas", evasRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/api/email", emailRoutes);
+app.use("/api/send-email", emailRoutes);
 
 export default app;
