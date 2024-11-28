@@ -11,7 +11,8 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-export const sendEmail = async(req, res) =>  {
+export const sendEmail = async (req, res) => {
+  console.log("Datos recibidos:", req.body); // Log para depuración
   const { email, wttp, message } = req.body;
 
   try {
@@ -20,11 +21,11 @@ export const sendEmail = async(req, res) =>  {
       to: "agustin.morro@gmail.com",
       subject: `Consulta de ${email} / EVAS DEL EDEN /`,
       html: `
-                <h1>Detalles del contacto:</h1>
-                <p><strong>Email:</strong>${email}</p>
-                <p><strong>WhatsApp:</strong>${wttp}</p>
-                <p><strong>Mensaje:</strong>${message}</p>
-            `,
+        <h1>Detalles del contacto:</h1>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>WhatsApp:</strong> ${wttp}</p>
+        <p><strong>Mensaje:</strong> ${message}</p>
+      `,
     });
 
     res.status(200).json({ message: "Correo enviado exitosamente" });
@@ -32,7 +33,4 @@ export const sendEmail = async(req, res) =>  {
     console.error("Error en el controlador:", err);
     res.status(500).json({ error: "Error al enviar el correo" });
   }
-}
-
-
-
+};
