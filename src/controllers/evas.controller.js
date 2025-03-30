@@ -12,8 +12,16 @@ export const getEvas = async (req, res) => {
 };
 
 export const createEva = async (req, res) => {
-  const { name, location, isActive, category, wttp, description, images, videos} =
-    req.body;
+  const {
+    name,
+    location,
+    isActive,
+    category,
+    wttp,
+    description,
+    images,
+    videos,
+  } = req.body;
 
   try {
     const newEva = new Eva({
@@ -24,7 +32,7 @@ export const createEva = async (req, res) => {
       wttp,
       description,
       images,
-      videos
+      videos,
     });
 
     const savedEva = await newEva.save();
@@ -37,29 +45,34 @@ export const createEva = async (req, res) => {
 
 export const deleteEva = async (req, res) => {
   try {
-    const eva = await Eva.findByIdAndDelete(req.params.id);
+    const eva = await Eva.findById(req.params.id);
 
     if (!eva) {
-      return res.status(404).json({ message: error.message });
+      return res.status(404).json({ message: "Eva no encontrado" });
     }
 
-    if (eva.images.length > 0) {
-      for (const img of eva.images) {
-        try {
-          await deleteImage(img.public_id); // Delete each image one by one
-          console.log(`Deleted image with id: ${img.public_id}`);
-        } catch (error) {
-          console.error(
-            `Failed to delete image ${img.public_id}: ${error.message}`
-          );
-        }
-      }
-    }
+    const deletePromises = eva.images.map((img) =>
+      deleteImage(img.public_id)
+        .then(() => console.log(`Imagen ${img.public_id} eliminada`))
+        .catch((error) => {
+          console.error(`Error eliminando imagen ${img.public_id}:`, error);
+        })
+    );
 
-    res.json(eva);
+    await Promise.all(deletePromises);
+
+    const deletedEva = await Eva.findByIdAndDelete(req.params.id);
+
+    res.json({
+      message: "Evento e imágenes eliminados",
+      event: deletedEva,
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: error.message });
+    console.error("Error en deleteEva:", error);
+    res.status(500).json({
+      message: "Error al eliminar el eva",
+      error: error.message,
+    });
   }
 };
 
@@ -91,7 +104,7 @@ export const getEvasByCategory = async (req, res) => {
   try {
     // Filtrar directamente en la consulta de MongoDB
     const evas = await Eva.find({ category });
-    
+
     if (!evas.length) {
       return res.status(404).json({ message: "GetEvasByCategory not found" });
     }
@@ -105,9 +118,8 @@ export const getEvasByCategory = async (req, res) => {
 export const getEvaByLocation = async (req, res) => {
   const location = req.params.locationName;
   try {
-    // Filtrar directamente en la consulta de MongoDB
     const evas = await Eva.find({ location });
-    
+
     if (!evas.length) {
       return res.status(404).json({ message: "GetEvasByLocation not found" });
     }
@@ -121,11 +133,9 @@ export const getEvaByLocation = async (req, res) => {
 export const getEvasByCategoryFilter = async (req, res) => {
   const { location } = req.query; // Obtiene la ubicación desde el query params
 
-  // Definir las ubicaciones válidas
   const validLocations = ["Mendoza", "Cordoba", "Buenos Aires", "Santa Fe"];
 
   try {
-    // Verificar si la ubicación es válida
     if (!validLocations.includes(location)) {
       return res.status(400).json({ message: "Invalid location" });
     }
@@ -135,15 +145,15 @@ export const getEvasByCategoryFilter = async (req, res) => {
       {
         $match: {
           category: { $in: ["Platinum", "Gold", "Silver"] }, // Filtra por estas categorías
-          location: location // Filtra por la ubicación proporcionada
-        }
+          location: location, // Filtra por la ubicación proporcionada
+        },
       },
       {
         $group: {
           _id: "$category", // Agrupa por el campo "category"
-          evas: { $push: "$$ROOT" } // Inserta todas las evas de esa categoría
-        }
-      }
+          evas: { $push: "$$ROOT" }, // Inserta todas las evas de esa categoría
+        },
+      },
     ]);
 
     if (!evasByCategory.length) {
@@ -154,5 +164,29 @@ export const getEvasByCategoryFilter = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: error.message });
+  }
+};
+
+export const deleteOneImage = async (req, res) => {
+  const { img: public_id } = req.params;
+
+  try {
+    if (!public_id) {
+      return res
+        .status(400)
+        .json({ message: "Falta el public_id de la imagen" });
+    }
+
+    await deleteImage(public_id);
+
+    await Eva.updateMany(
+      { "images.public_id": public_id },
+      { $pull: { images: { public_id: public_id } } }
+    );
+
+    return res.status(200).json({ message: "Imagen eliminada correctamente" });
+  } catch (error) {
+    console.error("Error al procesar la eliminación de la imagen:", error);
+    return res.status(500).json({ message: "Error al eliminar la imagen" });
   }
 };
