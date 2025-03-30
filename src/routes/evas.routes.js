@@ -8,7 +8,8 @@ import {
   getEvasByCategory,
   getEvasByCategoryFilter,
   getEvaByLocation,
-  deleteOneImage
+  deleteOneImage,
+  deleteOneVideo,
 } from "../controllers/evas.controller.js";
 
 const router = Router();
@@ -20,10 +21,11 @@ router.get("/location/:locationName", getEvaByLocation);
 router.get("/", getEvas);
 router.post("/", createEva);
 
-router.get("/:id", getEva);  // Rutas dinámicas al final
+router.get("/:id", getEva); 
 router.delete("/:id", deleteEva);
 router.put("/:id", updateEva);
 
 router.delete("/delete-image/:img(*)", deleteOneImage);
+router.delete("/delete-video/:video(*)", deleteOneVideo);
 
 export default router;

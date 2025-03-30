@@ -21,3 +21,7 @@ export const uploadImage = async (filePath) => {
 export const deleteImage = async (publicId) => {
   return await cloudinary.uploader.destroy(publicId);
 };
+
+export const deleteVideo = async (publicId) => {
+  return await cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
+};

@@ -1,5 +1,5 @@
 import Eva from "../models/eva.model.js";
-import { deleteImage } from "../libs/cloudinary.js";
+import { deleteImage, deleteVideo } from "../libs/cloudinary.js";
 
 export const getEvas = async (req, res) => {
   try {
@@ -188,5 +188,29 @@ export const deleteOneImage = async (req, res) => {
   } catch (error) {
     console.error("Error al procesar la eliminación de la imagen:", error);
     return res.status(500).json({ message: "Error al eliminar la imagen" });
+  }
+};
+
+export const deleteOneVideo = async (req, res) => {
+  const { video: public_id } = req.params;
+
+  try {
+    if (!public_id) {
+      return res
+        .status(400)
+        .json({ message: "Falta el public_id del video" });
+    }
+
+    await deleteVideo(public_id);
+
+    await Eva.updateMany(
+      { "videos.public_id": public_id },
+      { $pull: { videos: { public_id: public_id } } }
+    );
+
+    return res.status(200).json({ message: "Video eliminado correctamente" });
+  } catch (error) {
+    console.error("Error al procesar la eliminación del video:", error);
+    return res.status(500).json({ message: "Error al eliminar el video" });
   }
 };
