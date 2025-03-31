@@ -51,7 +51,7 @@ export const deleteEva = async (req, res) => {
       return res.status(404).json({ message: "Eva no encontrado" });
     }
 
-    const deletePromises = eva.images.map((img) =>
+    const deleteImagePromises = eva.images.map((img) =>
       deleteImage(img.public_id)
         .then(() => console.log(`Imagen ${img.public_id} eliminada`))
         .catch((error) => {
@@ -59,12 +59,20 @@ export const deleteEva = async (req, res) => {
         })
     );
 
-    await Promise.all(deletePromises);
+    const deleteVideoPromises = eva.videos?.map((video) =>
+      deleteVideo(video.public_id)
+        .then(() => console.log(`Video ${video.public_id} eliminado`))
+        .catch((error) => {
+          console.error(`Error eliminando video ${video.public_id}:`, error);
+        })
+    ) || []; // Si no hay videos, usar array vacío
+
+    await Promise.all([...deleteImagePromises, ...deleteVideoPromises]);
 
     const deletedEva = await Eva.findByIdAndDelete(req.params.id);
 
     res.json({
-      message: "Evento e imágenes eliminados",
+      message: "Eva, imágenes y videos eliminados correctamente",
       event: deletedEva,
     });
   } catch (error) {
