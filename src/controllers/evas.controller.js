@@ -14,7 +14,7 @@ export const getEvas = async (req, res) => {
 export const createEva = async (req, res) => {
   const {
     name,
-    location,
+    detailLocation,
     isActive,
     category,
     wttp,
@@ -26,7 +26,7 @@ export const createEva = async (req, res) => {
   try {
     const newEva = new Eva({
       name,
-      location,
+      detailLocation,
       isActive,
       category,
       wttp,
@@ -59,13 +59,14 @@ export const deleteEva = async (req, res) => {
         })
     );
 
-    const deleteVideoPromises = eva.videos?.map((video) =>
-      deleteVideo(video.public_id)
-        .then(() => console.log(`Video ${video.public_id} eliminado`))
-        .catch((error) => {
-          console.error(`Error eliminando video ${video.public_id}:`, error);
-        })
-    ) || []; // Si no hay videos, usar array vacío
+    const deleteVideoPromises =
+      eva.videos?.map((video) =>
+        deleteVideo(video.public_id)
+          .then(() => console.log(`Video ${video.public_id} eliminado`))
+          .catch((error) => {
+            console.error(`Error eliminando video ${video.public_id}:`, error);
+          })
+      ) || []; // Si no hay videos, usar array vacío
 
     await Promise.all([...deleteImagePromises, ...deleteVideoPromises]);
 
@@ -107,68 +108,14 @@ export const updateEva = async (req, res) => {
   }
 };
 
-export const getEvasByCategory = async (req, res) => {
-  const category = req.params.categoryName;
+export const getEvasByProvince = async (req, res) => {
   try {
-    // Filtrar directamente en la consulta de MongoDB
-    const evas = await Eva.find({ category });
-
-    if (!evas.length) {
-      return res.status(404).json({ message: "GetEvasByCategory not found" });
-    }
+    const { province } = req.params;
+    const evas = await Eva.find({
+      "detailLocation.province": province,
+      isActive: true,
+    });
     res.json(evas);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: error.message });
-  }
-};
-
-export const getEvaByLocation = async (req, res) => {
-  const location = req.params.locationName;
-  try {
-    const evas = await Eva.find({ location });
-
-    if (!evas.length) {
-      return res.status(404).json({ message: "GetEvasByLocation not found" });
-    }
-    res.json(evas);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: error.message });
-  }
-};
-
-export const getEvasByCategoryFilter = async (req, res) => {
-  const { location } = req.query; // Obtiene la ubicación desde el query params
-
-  const validLocations = ["Mendoza", "Cordoba", "Buenos Aires", "Santa Fe"];
-
-  try {
-    if (!validLocations.includes(location)) {
-      return res.status(400).json({ message: "Invalid location" });
-    }
-
-    // Agrupamos las evas por categoría y filtramos por ubicación
-    const evasByCategory = await Eva.aggregate([
-      {
-        $match: {
-          category: { $in: ["Platinum", "Gold", "Silver"] }, // Filtra por estas categorías
-          location: location, // Filtra por la ubicación proporcionada
-        },
-      },
-      {
-        $group: {
-          _id: "$category", // Agrupa por el campo "category"
-          evas: { $push: "$$ROOT" }, // Inserta todas las evas de esa categoría
-        },
-      },
-    ]);
-
-    if (!evasByCategory.length) {
-      return res.status(404).json({ message: "No evas found" });
-    }
-
-    res.json(evasByCategory);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: error.message });
@@ -204,9 +151,7 @@ export const deleteOneVideo = async (req, res) => {
 
   try {
     if (!public_id) {
-      return res
-        .status(400)
-        .json({ message: "Falta el public_id del video" });
+      return res.status(400).json({ message: "Falta el public_id del video" });
     }
 
     await deleteVideo(public_id);
@@ -222,3 +167,71 @@ export const deleteOneVideo = async (req, res) => {
     return res.status(500).json({ message: "Error al eliminar el video" });
   }
 };
+
+/* export const getEvasByCategory = async (req, res) => {
+  const category = req.params.categoryName;
+  try {
+    // Filtrar directamente en la consulta de MongoDB
+    const evas = await Eva.find({ category });
+
+    if (!evas.length) {
+      return res.status(404).json({ message: "GetEvasByCategory not found" });
+    }
+    res.json(evas);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+}; */
+
+/* export const getEvaByLocation = async (req, res) => {
+  const location = req.params.locationName;
+  try {
+    const evas = await Eva.find({ location });
+
+    if (!evas.length) {
+      return res.status(404).json({ message: "GetEvasByLocation not found" });
+    }
+    res.json(evas);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+}; */
+
+/* export const getEvasByCategoryFilter = async (req, res) => {
+  const { location } = req.query; // Obtiene la ubicación desde el query params
+
+  const validLocations = ["Mendoza", "Cordoba", "Buenos Aires", "Santa Fe"];
+
+  try {
+    if (!validLocations.includes(location)) {
+      return res.status(400).json({ message: "Invalid location" });
+    }
+
+    // Agrupamos las evas por categoría y filtramos por ubicación
+    const evasByCategory = await Eva.aggregate([
+      {
+        $match: {
+          category: { $in: ["Platinum", "Gold", "Silver"] }, // Filtra por estas categorías
+          location: location, // Filtra por la ubicación proporcionada
+        },
+      },
+      {
+        $group: {
+          _id: "$category", // Agrupa por el campo "category"
+          evas: { $push: "$$ROOT" }, // Inserta todas las evas de esa categoría
+        },
+      },
+    ]);
+
+    if (!evasByCategory.length) {
+      return res.status(404).json({ message: "No evas found" });
+    }
+
+    res.json(evasByCategory);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+}; */

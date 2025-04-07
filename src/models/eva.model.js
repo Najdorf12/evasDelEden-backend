@@ -6,8 +6,10 @@ const evaSchema = new Schema(
       type: String,
       unique: true,
     },
-    location: {
-      type: String,
+    detailLocation: {
+      province: { type: String },
+      region: { type: String },
+      city: { type: String },
     },
     isActive: {
       type: Boolean,
@@ -27,7 +29,7 @@ const evaSchema = new Schema(
       depilacion: { type: String },
       servicio: { type: String },
       horario: { type: String },
-      extendDescription : { type : String},
+      extendDescription: { type: String },
     },
     images: [
       {
