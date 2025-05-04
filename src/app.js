@@ -15,6 +15,7 @@ app.use(
       "http://localhost:5173",
       "https://evas-del-eden-frontend.vercel.app",
       "https://www.evasdeleden.com",
+      "https://evasdeleden.com"
     ],
     credentials: true,
   })
