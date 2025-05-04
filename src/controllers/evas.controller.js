@@ -1,5 +1,5 @@
 import Eva from "../models/eva.model.js";
-import { deleteImage, deleteVideo } from "../libs/cloudinary.js";
+import { deleteImageFromR2, deleteVideoFromR2 } from "../libs/r2-service.js";
 
 export const getEvas = async (req, res) => {
   try {
@@ -52,34 +52,40 @@ export const deleteEva = async (req, res) => {
     }
 
     const deleteImagePromises = eva.images.map((img) =>
-      deleteImage(img.public_id)
-        .then(() => console.log(`Imagen ${img.public_id} eliminada`))
+      deleteImageFromR2(img.public_id)
+        .then(() => console.log(`Imagen ${img.public_id} eliminada de R2`))
         .catch((error) => {
-          console.error(`Error eliminando imagen ${img.public_id}:`, error);
+          console.error(
+            `Error eliminando imagen ${img.public_id} de R2:`,
+            error
+          );
         })
     );
 
     const deleteVideoPromises =
       eva.videos?.map((video) =>
-        deleteVideo(video.public_id)
-          .then(() => console.log(`Video ${video.public_id} eliminado`))
+        deleteVideoFromR2(video.public_id)
+          .then(() => console.log(`Video ${video.public_id} eliminado de R2`))
           .catch((error) => {
-            console.error(`Error eliminando video ${video.public_id}:`, error);
+            console.error(
+              `Error eliminando video ${video.public_id} de R2:`,
+              error
+            );
           })
-      ) || []; // Si no hay videos, usar array vacío
+      ) || [];
 
     await Promise.all([...deleteImagePromises, ...deleteVideoPromises]);
 
     const deletedEva = await Eva.findByIdAndDelete(req.params.id);
 
     res.json({
-      message: "Eva, imágenes y videos eliminados correctamente",
+      message: "Eva, imágenes y videos eliminados correctamente de R2",
       event: deletedEva,
     });
   } catch (error) {
     console.error("Error en deleteEva:", error);
     res.status(500).json({
-      message: "Error al eliminar el eva",
+      message: "Error al eliminar el eva de R2",
       error: error.message,
     });
   }
@@ -122,7 +128,7 @@ export const getEvasByProvince = async (req, res) => {
   }
 };
 
-export const deleteOneImage = async (req, res) => {
+/* export const deleteOneImage = async (req, res) => {
   const { img: public_id } = req.params;
 
   try {
@@ -167,71 +173,4 @@ export const deleteOneVideo = async (req, res) => {
     return res.status(500).json({ message: "Error al eliminar el video" });
   }
 };
-
-/* export const getEvasByCategory = async (req, res) => {
-  const category = req.params.categoryName;
-  try {
-    // Filtrar directamente en la consulta de MongoDB
-    const evas = await Eva.find({ category });
-
-    if (!evas.length) {
-      return res.status(404).json({ message: "GetEvasByCategory not found" });
-    }
-    res.json(evas);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: error.message });
-  }
-}; */
-
-/* export const getEvaByLocation = async (req, res) => {
-  const location = req.params.locationName;
-  try {
-    const evas = await Eva.find({ location });
-
-    if (!evas.length) {
-      return res.status(404).json({ message: "GetEvasByLocation not found" });
-    }
-    res.json(evas);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: error.message });
-  }
-}; */
-
-/* export const getEvasByCategoryFilter = async (req, res) => {
-  const { location } = req.query; // Obtiene la ubicación desde el query params
-
-  const validLocations = ["Mendoza", "Cordoba", "Buenos Aires", "Santa Fe"];
-
-  try {
-    if (!validLocations.includes(location)) {
-      return res.status(400).json({ message: "Invalid location" });
-    }
-
-    // Agrupamos las evas por categoría y filtramos por ubicación
-    const evasByCategory = await Eva.aggregate([
-      {
-        $match: {
-          category: { $in: ["Platinum", "Gold", "Silver"] }, // Filtra por estas categorías
-          location: location, // Filtra por la ubicación proporcionada
-        },
-      },
-      {
-        $group: {
-          _id: "$category", // Agrupa por el campo "category"
-          evas: { $push: "$$ROOT" }, // Inserta todas las evas de esa categoría
-        },
-      },
-    ]);
-
-    if (!evasByCategory.length) {
-      return res.status(404).json({ message: "No evas found" });
-    }
-
-    res.json(evasByCategory);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: error.message });
-  }
-}; */
+ */
