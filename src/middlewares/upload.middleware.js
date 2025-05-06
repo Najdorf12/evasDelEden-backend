@@ -1,39 +1,56 @@
 import multer from 'multer';
+import { fileTypeFromBuffer } from 'file-type';
 
 const storage = multer.memoryStorage();
 
-const imageFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
-    cb(null, true);
-  } else {
-    cb(new Error('Solo se permiten archivos de imagen (JPEG, PNG, etc.)!'), false);
+// Validación mejorada de tipos de archivo
+const validateFileType = async (buffer, mimeType, expectedTypes) => {
+  const type = await fileTypeFromBuffer(buffer);
+  return type && expectedTypes.some(t => mimeType.startsWith(t) || type.mime.startsWith(t));
+};
+
+// Filtro mejorado para imágenes
+const imageFilter = async (req, file, cb) => {
+  try {
+    const isValid = await validateFileType(file.buffer, file.mimetype, ['image/']);
+    cb(null, isValid);
+  } catch (error) {
+    cb(new Error('Error verifying image file type'), false);
   }
 };
 
-const videoFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('video/')) {
-    cb(null, true);
-  } else {
-    cb(new Error('Solo se permiten archivos de video (MP4, MOV, etc.)!'), false);
+// Filtro mejorado para videos
+const videoFilter = async (req, file, cb) => {
+  try {
+    const isValid = await validateFileType(file.buffer, file.mimetype, ['video/']);
+    cb(null, isValid);
+  } catch (error) {
+    cb(new Error('Error verifying video file type'), false);
   }
 };
 
+// Configuración optimizada para imágenes
 const uploadImage = multer({
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB para imágenes
+    fileSize: 50 * 1024 * 1024, // Aumentado a 50MB para imágenes
+    files: 10 // Máximo de archivos
   },
   fileFilter: imageFilter
 });
 
-// Configuración para videos
+// Configuración optimizada para videos
 const uploadVideo = multer({
   storage: storage,
   limits: {
-    fileSize: 100 * 1024 * 1024 // 100MB para videos 
+    fileSize: 500 * 1024 * 1024, // Aumentado a 500MB para videos
+    files: 5
   },
   fileFilter: videoFilter
 });
 
+// Middlewares exportados
 export const uploadSingleImage = uploadImage.single('image');
+export const uploadMultipleImages = uploadImage.array('images', 10);
 export const uploadSingleVideo = uploadVideo.single('video');
+export const uploadMultipleVideos = uploadVideo.array('videos', 5);
