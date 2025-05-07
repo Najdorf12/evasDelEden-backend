@@ -1,93 +1,78 @@
 import multer from "multer";
 import path from "path";
-import { fileTypeFromBuffer, fileTypeFromFile } from "file-type";
+import { fileTypeFromFile } from "file-type";
 import { promises as fs } from "fs";
 
-// Configuración para almacenamiento temporal (crítico para Vercel)
+// Configuración de almacenamiento temporal
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, '/tmp'); // Vercel solo permite escribir en /tmp
+    cb(null, '/tmp');
   },
-  filename: async (req, file, cb) => {
+  filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+    const uniqueName = `upload-${Date.now()}${ext}`;
+    cb(null, uniqueName);
   }
 });
 
-// Función mejorada para manejo de tipos de archivo
-const handleFileFilter = async (req, file, cb, expectedType) => {
+// Verificación de tipo de archivo optimizada
+const verifyFileType = async (file, expectedType) => {
   try {
-    // Verificación inicial por mimetype
     if (!file.mimetype.startsWith(`${expectedType}/`)) {
-      return cb(new Error(`El archivo debe ser de tipo ${expectedType}`), false);
+      return false;
     }
-
-    // Verificación profunda del tipo de archivo
-    let type;
-    if (file.path) {
-      // Cuando usamos diskStorage, verificamos el archivo temporal
-      type = await fileTypeFromFile(file.path);
-    } else if (file.buffer) {
-      // Fallback para memoryStorage
-      type = await fileTypeFromBuffer(file.buffer);
-    }
-
-    if (!type?.mime.startsWith(`${expectedType}/`)) {
-      // Limpiar archivo temporal si existe
-      if (file.path) await fs.unlink(file.path).catch(() => {});
-      return cb(new Error(`El archivo no es un ${expectedType} válido`), false);
-    }
-
-    cb(null, true);
+    
+    const type = await fileTypeFromFile(file.path);
+    return type?.mime.startsWith(`${expectedType}/`);
   } catch (error) {
-    console.error(`Error en ${expectedType}Filter:`, error);
-    if (file.path) await fs.unlink(file.path).catch(() => {});
-    cb(new Error(`Error al verificar el tipo de archivo`), false);
+    console.error('File verification error:', error);
+    return false;
   }
 };
 
-// Configuración mejorada para Multer
+// Middleware factory actualizado
 const createUploader = (options) => {
   const upload = multer({
-    storage: storage, // Usamos diskStorage en lugar de memoryStorage
+    storage: storage,
     limits: {
       fileSize: options.limits.fileSize,
-      files: options.limits.files,
-      fieldSize: options.limits.fileSize // Añadido para campos de formulario grandes
-    },
-    fileFilter: (req, file, cb) => handleFileFilter(req, file, cb, options.expectedType)
+      files: options.limits.files
+    }
   });
 
   return async (req, res, next) => {
-    const middleware = upload.single(options.fieldName);
-    
-    middleware(req, res, async (err) => {
+    upload.single(options.fieldName)(req, res, async (err) => {
       if (err) {
-        // Limpieza de archivos temporales en caso de error
-        if (req.file?.path) {
-          await fs.unlink(req.file.path).catch(() => {});
-        }
-
-        const statusCode = err instanceof multer.MulterError ? 413 : 400;
+        if (req.file?.path) await fs.unlink(req.file.path).catch(() => {});
+        
+        const statusCode = err.code === 'LIMIT_FILE_SIZE' ? 413 : 400;
         return res.status(statusCode).json({
           success: false,
-          message: err.message,
-          error: err.code || "FILE_VALIDATION_ERROR",
+          message: err.code === 'LIMIT_FILE_SIZE' 
+            ? `El archivo excede el límite de ${options.limits.fileSize/1024/1024}MB` 
+            : err.message
         });
       }
+
+      if (!(await verifyFileType(req.file, options.expectedType))) {
+        await fs.unlink(req.file.path).catch(() => {});
+        return res.status(400).json({
+          success: false,
+          message: `Tipo de archivo no válido. Se esperaba ${options.expectedType}`
+        });
+      }
+
       next();
     });
   };
 };
 
-// Middlewares exportados con configuración optimizada
 export const uploadSingleImage = createUploader({
   fieldName: "image",
   expectedType: "image",
   limits: {
-    fileSize: 120 * 1024 * 1024, // Aumentado a 120MB
-    files: 1 // Reducido a 1 archivo por vez para mejor manejo
+    fileSize: 120 * 1024 * 1024, // 120MB
+    files: 1
   }
 });
 

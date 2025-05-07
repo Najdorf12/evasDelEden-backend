@@ -5,6 +5,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { createReadStream } from 'fs';
+import { promises as fs } from 'fs';
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -19,6 +20,12 @@ const r2Client = new S3Client({
   forcePathStyle: true,
 });
 
+// Configuración común para uploads
+const uploadConfig = {
+  partSize: 20 * 1024 * 1024, // 20MB por parte
+  queueSize: 4, // Partes concurrentes
+};
+
 export const uploadImageToR2 = async (file, folder = "evas-images") => {
   try {
     if (!file?.path && !file?.buffer) {
@@ -26,8 +33,6 @@ export const uploadImageToR2 = async (file, folder = "evas-images") => {
     }
 
     const fileName = `${folder}/${Date.now()}-${file.originalname.replace(/\s+/g, "-")}`;
-    
-    // Usar streaming si está disponible el path, sino usar buffer
     const body = file.path ? createReadStream(file.path) : file.buffer;
 
     const upload = new Upload({
@@ -42,8 +47,7 @@ export const uploadImageToR2 = async (file, folder = "evas-images") => {
           size: file.size.toString()
         }
       },
-      partSize: 20 * 1024 * 1024, // 20MB por parte
-      queueSize: 4, // Partes concurrentes
+      ...uploadConfig
     });
 
     await upload.done();
@@ -54,10 +58,15 @@ export const uploadImageToR2 = async (file, folder = "evas-images") => {
     };
   } catch (error) {
     console.error('R2 Upload Error:', error);
-    throw new Error(`Failed to upload: ${error.message}`);
+    
+    // Limpieza del archivo temporal si existe
+    if (file?.path) {
+      await fs.unlink(file.path).catch(console.error);
+    }
+
+    throw error;
   }
 };
-
 export const uploadVideoToR2 = async (file, folder = "evas-videos") => {
   if (!file?.buffer) throw new Error("No file buffer provided");
   

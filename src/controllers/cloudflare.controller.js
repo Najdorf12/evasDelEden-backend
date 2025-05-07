@@ -6,52 +6,40 @@ import { fileTypeFromBuffer } from 'file-type';
 export const uploadImage = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
-    }
-
-    // Verificar tamaño manualmente (opcional)
-    if (req.file.size > 120 * 1024 * 1024) {
-      await fs.unlink(req.file.path);
-      return res.status(413).json({ message: "File exceeds 120MB limit" });
-    }
-
-    // Verificación adicional del tipo de archivo
-    if (req.file.buffer) {
-      const type = await fileTypeFromBuffer(req.file.buffer);
-      if (!type?.mime.startsWith('image/')) {
-        await fs.unlink(req.file.path);
-        return res.status(400).json({ message: "Invalid image file" });
-      }
+      return res.status(400).json({ message: "No se proporcionó archivo" });
     }
 
     const result = await uploadImageToR2({
       ...req.file,
-      path: req.file.path // Asegúrate que multer guarde en disk
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      path: req.file.path
     });
 
-    // Limpiar archivo temporal
-    if (req.file.path) {
-      await fs.unlink(req.file.path).catch(console.error);
-    }
+    // Limpieza del archivo temporal
+    await fs.unlink(req.file.path).catch(console.error);
 
     res.status(200).json({
       public_id: result.public_id,
-      secure_url: result.secure_url,
+      secure_url: result.secure_url
     });
 
   } catch (error) {
+    console.error("Error al subir imagen:", error);
+    
     // Limpieza en caso de error
     if (req.file?.path) {
       await fs.unlink(req.file.path).catch(console.error);
     }
 
-    console.error("Upload error:", error);
     res.status(500).json({
-      message: "Error uploading image",
+      message: "Error al subir imagen",
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
+
 export const deleteImage = async (req, res) => {
   try {
     const { public_id } = req.params;
