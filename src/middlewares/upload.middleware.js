@@ -1,56 +1,84 @@
 import multer from "multer";
-import { fileTypeFromBuffer } from "file-type";
+import path from "path";
+import { fileTypeFromStream } from "file-type";
+import { createWriteStream, unlinkSync } from "fs";
+import { pipeline } from "stream/promises";
 
-// Configuración optimizada de almacenamiento
-const storage = multer.memoryStorage();
+// Configuración para almacenamiento temporal
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, '/tmp'); // Vercel permite escribir en /tmp
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, `${uniqueSuffix}-${file.originalname}`);
+  }
+});
 
-// Función mejorada para manejo de streams
-const handleFileFilter = async (req, file, cb, expectedType) => {
-  try {
-    // Verificación rápida por mimetype
-    if (file.mimetype.startsWith(`${expectedType}/`)) {
-      return cb(null, true);
-    }
-
-    // Verificación profunda del buffer
-    if (file.buffer && file.buffer.length > 0) {
-      const type = await fileTypeFromBuffer(file.buffer);
-      if (type?.mime.startsWith(`${expectedType}/`)) {
-        return cb(null, true);
-      }
-    }
-
-    cb(new Error(`Solo se permiten archivos de ${expectedType}`), false);
-  } catch (error) {
-    console.error(`Error en ${expectedType}Filter:`, error);
-    cb(new Error(`Error al verificar el tipo de ${expectedType}`), false);
+// Verificación de tipo de archivo mejorada
+const checkFileType = async (filePath, expectedType) => {
+  const stream = createReadStream(filePath);
+  const type = await fileTypeFromStream(stream);
+  await stream.close();
+  
+  if (!type || !type.mime.startsWith(`${expectedType}/`)) {
+    throw new Error(`El archivo no es un ${expectedType} válido`);
   }
 };
 
-// Configuración para Multer
+// Middleware factory mejorado
 const createUploader = (options) => {
   const upload = multer({
     storage: storage,
     limits: options.limits,
-    fileFilter: (req, file, cb) => handleFileFilter(req, file, cb, options.expectedType)
+    fileFilter: async (req, file, cb) => {
+      try {
+        // Verificación inicial por mimetype
+        if (!file.mimetype.startsWith(`${options.expectedType}/`)) {
+          throw new Error(`Tipo MIME no válido para ${options.expectedType}`);
+        }
+        cb(null, true);
+      } catch (error) {
+        cb(error, false);
+      }
+    }
   });
 
-  return (req, res, next) => {
-    const middleware = upload.single(options.fieldName);
-    middleware(req, res, (err) => {
-      if (err) {
-        return res.status(400).json({
-          success: false,
-          message: err.message,
-          error: err instanceof multer.MulterError ? err.code : "FILE_VALIDATION_ERROR",
+  return async (req, res, next) => {
+    try {
+      // Procesar la subida
+      await new Promise((resolve, reject) => {
+        upload.single(options.fieldName)(req, res, (err) => {
+          if (err) reject(err);
+          else resolve();
         });
+      });
+
+      // Verificación adicional del tipo de archivo
+      if (req.file) {
+        await checkFileType(req.file.path, options.expectedType);
       }
+
       next();
-    });
+    } catch (error) {
+      // Limpieza de archivos temporales en caso de error
+      if (req.file?.path) {
+        try {
+          unlinkSync(req.file.path);
+        } catch (cleanupError) {
+          console.error('Error limpiando archivo temporal:', cleanupError);
+        }
+      }
+
+      res.status(400).json({
+        success: false,
+        message: error.message,
+        error: error instanceof multer.MulterError ? error.code : "FILE_VALIDATION_ERROR",
+      });
+    }
   };
 };
 
-// Middlewares exportados
 export const uploadSingleImage = createUploader({
   fieldName: "image",
   expectedType: "image",
