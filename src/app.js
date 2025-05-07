@@ -10,41 +10,39 @@ import compression from "compression";
 
 const app = express();
 
-// 1. Configuración CORS mejorada
 const corsOptions = {
   origin: [
     "https://evasdeleden.com",
     "https://www.evasdeleden.com",
-    "http://localhost:5173",
-    "https://evas-del-eden-frontend.vercel.app"
+    "http://localhost:5173"
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  exposedHeaders: ['Content-Length', 'Content-Range', 'X-Request-ID'],
-  maxAge: 86400,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'X-File-Size'],
   optionsSuccessStatus: 204
 };
 
-// 2. Aplicar middleware CORS de forma consistente
+// Aplicar CORS antes que cualquier middleware
 app.use(cors(corsOptions));
 
-// 3. Configuración para archivos grandes
-app.use(express.json({ 
-  limit: '120mb',
-  verify: (req, res, buf) => {
-    req.rawBody = buf; // Guardar el buffer completo para posibles verificaciones
-  }
-}));
+// Configuración para archivos grandes
+app.use(express.json({ limit: '120mb' }));
+app.use(express.urlencoded({ limit: '120mb', extended: true }));
 
-app.use(express.urlencoded({ 
-  limit: '120mb', 
-  extended: true,
-  parameterLimit: 100000
-}));
-
-// 4. Middleware para manejar preflight OPTIONS explícitamente
+// Middleware para manejar preflight OPTIONS explícitamente
 app.options('*', cors(corsOptions));
+
+// Middleware para verificar CORS en cada request
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (corsOptions.origin.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Expose-Headers', 'Content-Length, X-File-Size');
+  }
+  next();
+});
 
 // 5. Otros middlewares
 app.use(morgan("dev"));
