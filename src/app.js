@@ -11,46 +11,39 @@ import compression from "compression";
 const app = express();
 
 // Configuración ampliada de CORS
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://evas-del-eden-frontend.vercel.app",
+  "https://www.evasdeleden.com",
+  "https://evasdeleden.com"
+];
+
 const corsOptions = {
-  origin: [
-    "http://localhost:5173",
-    "https://evas-del-eden-frontend.vercel.app",
-    "https://www.evasdeleden.com",
-    "https://evasdeleden.com"
-  ],
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   maxAge: 86400,
-  preflightContinue: false,
   optionsSuccessStatus: 204
 };
 
-// Aumentar límites para requests con payloads grandes
+// Middleware para aumentar límites
 app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ limit: '100mb', extended: true, parameterLimit: 100000 }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
-// Middleware CORS mejorado
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (corsOptions.origin.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  res.setHeader('Access-Control-Allow-Methods', corsOptions.methods.join(','));
-  res.setHeader('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(','));
-  res.setHeader('Access-Control-Expose-Headers', corsOptions.exposedHeaders.join(','));
-  res.setHeader('Access-Control-Max-Age', corsOptions.maxAge);
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(corsOptions.optionsSuccessStatus).end();
-  }
-  
-  next();
-});
+// Configuración especial para preflight OPTIONS
+app.options('*', cors(corsOptions));
 
-app.use(cors(corsOptions)); // Doble capa de protección
+// Middleware CORS principal
+app.use(cors(corsOptions));
+
+// Otros middlewares
 app.use(morgan("dev"));
 app.use(compression());
 app.use(cookieParser());
@@ -60,5 +53,16 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/evas", evasRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/send-email", emailRoutes);
+
+// Manejo de errores CORS
+app.use((err, req, res, next) => {
+  if (err.name === 'CorsError') {
+    return res.status(403).json({ 
+      success: false,
+      message: 'Not allowed by CORS policy'
+    });
+  }
+  next(err);
+});
 
 export default app;
