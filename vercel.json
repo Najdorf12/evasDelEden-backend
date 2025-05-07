@@ -8,19 +8,36 @@
   ],
   "routes": [
     {
-      "src": "/api/upload/(.*)",
-      "methods": ["POST", "OPTIONS"],
-      "dest": "index.js",
-      "headers": {
-        "Access-Control-Allow-Origin": "https://evasdeleden.com",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        "Access-Control-Max-Age": "86400"
-      }
-    },
-    {
       "src": "/(.*)",
-      "dest": "index.js"
+      "dest": "index.js",
+      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"]
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/upload/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "https://evasdeleden.com"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "POST, PUT, DELETE, GET, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization, X-Requested-With"
+        },
+        {
+          "key": "Access-Control-Allow-Credentials",
+          "value": "true"
+        },
+        {
+          "key": "Access-Control-Max-Age",
+          "value": "86400"
+        }
+      ]
     }
   ]
 }
