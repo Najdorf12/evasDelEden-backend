@@ -27,7 +27,7 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization, X-Requested-With"
+          "value": "Content-Type, Authorization, X-Requested-With, Accept, Origin"
         },
         {
           "key": "Access-Control-Allow-Credentials",
@@ -39,5 +39,11 @@
         }
       ]
     }
-  ]
+  ],
+  "limits": {
+    "bodySize": "50mb",
+    "external": {
+      "size": "50mb"
+    }
+  }
 }

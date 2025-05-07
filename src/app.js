@@ -28,25 +28,28 @@ const corsOptions = {
 };
 
 // Aumentar límites para requests con payloads grandes
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ limit: '100mb', extended: true, parameterLimit: 100000 }));
+app.use(express.json({ limit: '120mb' }));
+app.use(express.urlencoded({ limit: '120mb', extended: true }));
 
 // Middleware CORS mejorado
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  console.log('Origin recibido:', req.headers.origin); 
+  const allowedOrigins = [
+    "https://evasdeleden.com",
+    "https://www.evasdeleden.com",
+    "http://localhost:5173"
+  ];
   
-  if (corsOptions.origin.includes(origin)) {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
-  res.setHeader('Access-Control-Allow-Methods', corsOptions.methods.join(','));
-  res.setHeader('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(','));
-  res.setHeader('Access-Control-Expose-Headers', corsOptions.exposedHeaders.join(','));
-  res.setHeader('Access-Control-Max-Age', corsOptions.maxAge);
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   
   if (req.method === 'OPTIONS') {
-    return res.status(corsOptions.optionsSuccessStatus).end();
+    return res.sendStatus(200);
   }
   
   next();
