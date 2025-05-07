@@ -1,7 +1,7 @@
 import { uploadImageToR2, deleteImageFromR2 } from "../libs/r2-service.js";
 import { uploadVideoToR2, deleteVideoFromR2 } from "../libs/r2-service.js";
+import { promises as fs } from 'fs';
 import { fileTypeFromBuffer } from 'file-type';
-import fs from 'fs';
 
 export const uploadImage = async (req, res) => {
   try {
@@ -9,56 +9,49 @@ export const uploadImage = async (req, res) => {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // Leer el archivo temporal como buffer para verificación adicional
-    const fileBuffer = await fs.promises.readFile(req.file.path);
-    
-    // Verificación profunda del tipo de archivo
-    const fileType = await fileTypeFromBuffer(fileBuffer);
-    if (!fileType?.mime.startsWith('image/')) {
-      await fs.promises.unlink(req.file.path); // Limpiar archivo temporal
-      return res.status(400).json({ message: "El archivo no es una imagen válida" });
+    // Verificar tamaño manualmente (opcional)
+    if (req.file.size > 120 * 1024 * 1024) {
+      await fs.unlink(req.file.path);
+      return res.status(413).json({ message: "File exceeds 120MB limit" });
     }
 
-    // Crear objeto file compatible con tu servicio R2
-    const r2File = {
-      originalname: req.file.originalname,
-      buffer: fileBuffer,
-      mimetype: req.file.mimetype,
-      size: req.file.size,
-      path: req.file.path // Para limpieza posterior
-    };
+    // Verificación adicional del tipo de archivo
+    if (req.file.buffer) {
+      const type = await fileTypeFromBuffer(req.file.buffer);
+      if (!type?.mime.startsWith('image/')) {
+        await fs.unlink(req.file.path);
+        return res.status(400).json({ message: "Invalid image file" });
+      }
+    }
 
-    const result = await uploadImageToR2(r2File);
+    const result = await uploadImageToR2({
+      ...req.file,
+      path: req.file.path // Asegúrate que multer guarde en disk
+    });
 
-    // Limpiar archivo temporal después de subir a R2
-    try {
-      await fs.promises.unlink(req.file.path);
-    } catch (cleanupError) {
-      console.error('Error cleaning temp file:', cleanupError);
+    // Limpiar archivo temporal
+    if (req.file.path) {
+      await fs.unlink(req.file.path).catch(console.error);
     }
 
     res.status(200).json({
       public_id: result.public_id,
       secure_url: result.secure_url,
     });
+
   } catch (error) {
     // Limpieza en caso de error
     if (req.file?.path) {
-      try {
-        await fs.promises.unlink(req.file.path);
-      } catch (cleanupError) {
-        console.error('Error cleaning temp file on error:', cleanupError);
-      }
+      await fs.unlink(req.file.path).catch(console.error);
     }
 
-    console.error("Error in uploadImage:", error);
+    console.error("Upload error:", error);
     res.status(500).json({
       message: "Error uploading image",
-      error: process.env.NODE_ENV === 'production' ? undefined : error.message,
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
-
 export const deleteImage = async (req, res) => {
   try {
     const { public_id } = req.params;
