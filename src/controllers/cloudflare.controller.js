@@ -1,130 +1,100 @@
-import {
-  S3Client,
-  PutObjectCommand,
-  DeleteObjectCommand,
-  GetObjectCommand
-} from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import dotenv from "dotenv";
+import { uploadImageToR2, deleteImageFromR2 } from "../libs/r2-service.js";
+import { uploadVideoToR2, deleteVideoFromR2 } from "../libs/r2-service.js";
+import { promises as fs } from 'fs';
+import { fileTypeFromBuffer } from 'file-type';
 
-dotenv.config();
-
-const r2Client = new S3Client({
-  region: "auto",
-  endpoint: process.env.R2_ENDPOINT,
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY,
-    secretAccessKey: process.env.R2_SECRET_KEY,
-  },
-  forcePathStyle: true,
-});
-
-// Generar URL firmada para subida directa
-export const generatePresignedUrlController = async (req, res) => {
+export const uploadImage = async (req, res) => {
   try {
-    const { fileName, fileType, folder = 'evas-uploads' } = req.body;
-    
-    if (!fileName || !fileType) {
-      return res.status(400).json({ 
-        success: false,
-        message: "Nombre y tipo de archivo son requeridos" 
-      });
+    if (!req.file) {
+      return res.status(400).json({ message: "No se proporcionó archivo" });
     }
 
-    const uniqueFileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${fileName.replace(/\s+/g, '-')}`;
-    
-    const command = new PutObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME,
-      Key: uniqueFileName,
-      ContentType: fileType,
+    const result = await uploadImageToR2({
+      ...req.file,
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      path: req.file.path
     });
 
-    const signedUrl = await getSignedUrl(r2Client, command, { expiresIn: 3600 });
+    // Limpieza del archivo temporal
+    await fs.unlink(req.file.path).catch(console.error);
 
     res.status(200).json({
-      success: true,
-      data: {
-        url: signedUrl,
-        publicUrl: `https://${process.env.R2_PUBLIC_DOMAIN}/${uniqueFileName}`,
-        key: uniqueFileName
-      }
+      public_id: result.public_id,
+      secure_url: result.secure_url
     });
 
   } catch (error) {
-    console.error('Error generating presigned URL:', error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Error generating upload URL',
+    console.error("Error al subir imagen:", error);
+    
+    // Limpieza en caso de error
+    if (req.file?.path) {
+      await fs.unlink(req.file.path).catch(console.error);
+    }
+
+    res.status(500).json({
+      message: "Error al subir imagen",
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
 
-// Guardar referencia en tu base de datos
-export const saveFileReference = async (req, res) => {
-  try {
-    const { publicUrl, key, size, type } = req.body;
-    
-    // Aquí deberías guardar la referencia en tu base de datos
-    // Esto es un ejemplo - adapta según tu modelo de datos
-    
-    res.status(200).json({
-      public_id: key,
-      secure_url: publicUrl,
-      // ...otros campos que necesites
-    });
-
-  } catch (error) {
-    console.error('Error saving file reference:', error);
-    res.status(500).json({ 
-      message: 'Error saving file reference',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-};
-
-// Eliminar imagen (puede mantenerse similar a tu implementación actual)
 export const deleteImage = async (req, res) => {
   try {
     const { public_id } = req.params;
-    
-    await r2Client.send(new DeleteObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME,
-      Key: public_id,
-    }));
 
-    // Aquí también deberías eliminar la referencia de tu base de datos
-    
-    res.status(200).json({ success: true });
+    await deleteImageFromR2(public_id);
 
+    res.status(200).json({
+      message: "Image deleted successfully",
+      public_id: public_id,
+    });
   } catch (error) {
-    console.error("Error deleting image:", error);
-    res.status(500).json({ 
+    console.error("Error in deleteImage:", error);
+    res.status(500).json({
       message: "Error deleting image",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: error.message,
     });
   }
 };
 
-// Eliminar video (similar a deleteImage)
+export const uploadVideo = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No video uploaded" });
+    }
+
+    const result = await uploadVideoToR2(req.file);
+
+    res.status(200).json({
+      public_id: result.public_id,
+      secure_url: result.secure_url,
+    });
+  } catch (error) {
+    console.error("Error in uploadVideo:", error);
+    res.status(500).json({
+      message: "Error uploading video",
+      error: error.message,
+    });
+  }
+};
+
 export const deleteVideo = async (req, res) => {
   try {
     const { public_id } = req.params;
-    
-    await r2Client.send(new DeleteObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME,
-      Key: public_id,
-    }));
 
-    // Eliminar referencia de la base de datos
-    
-    res.status(200).json({ success: true });
+    await deleteVideoFromR2(public_id);
 
+    res.status(200).json({
+      message: "Video deleted successfully",
+      public_id: public_id,
+    });
   } catch (error) {
-    console.error("Error deleting video:", error);
-    res.status(500).json({ 
+    console.error("Error in deleteVideo:", error);
+    res.status(500).json({
       message: "Error deleting video",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: error.message,
     });
   }
 };

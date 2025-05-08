@@ -67,4 +67,4 @@ export const uploadSingleVideo = createUploader({
     fileSize: 500 * 1024 * 1024, // 500MB
     files: 5
   }
-}); 
+});
