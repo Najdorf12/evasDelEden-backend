@@ -8,10 +8,14 @@ import {
 
 const router = Router();
 
-// Prefija todas las rutas con /upload
-router.post('/upload/generate-presigned-url', generatePresignedUrlController);
-router.post('/upload/save-reference', saveFileReference);
-router.delete('/upload/image/:public_id', deleteImage);
-router.delete('/upload/video/:public_id', deleteVideo);
+// Ruta para generar URLs firmadas
+router.post('/generate-presigned-url', generatePresignedUrlController);
+
+// Ruta para guardar referencias
+router.post('/save-reference', saveFileReference);
+
+// Rutas para eliminar
+router.delete('/image/:public_id', deleteImage);
+router.delete('/video/:public_id', deleteVideo);
 
 export default router;

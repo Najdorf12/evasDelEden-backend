@@ -73,7 +73,7 @@ app.use(compression());
 app.use(cookieParser());
 
 // Rutas
-app.use("/api", uploadRoutes);
+app.use("/api/upload", uploadRoutes); 
 app.use("/api/evas", evasRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/send-email", emailRoutes);
