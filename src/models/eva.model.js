@@ -31,6 +31,16 @@ const evaSchema = new Schema(
       horario: { type: String },
       extendDescription: { type: String },
     },
+    owner: {
+      type: Schema.Types.ObjectId,
+      ref: "Modelo",
+      default: null,
+    },
+    status: {
+      type: String,
+      enum: ["approved", "pending"],
+      default: "approved", // lo que carga el admin entra directo; lo que carguen ellas, no
+    },
     images: [
       {
         public_id: { type: String },
@@ -50,7 +60,7 @@ const evaSchema = new Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export default mongoose.model("Eva", evaSchema);
