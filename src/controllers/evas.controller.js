@@ -57,9 +57,9 @@ export const deleteEva = async (req, res) => {
         .catch((error) => {
           console.error(
             `Error eliminando imagen ${img.public_id} de R2:`,
-            error
+            error,
           );
-        })
+        }),
     );
 
     const deleteVideoPromises =
@@ -69,9 +69,9 @@ export const deleteEva = async (req, res) => {
           .catch((error) => {
             console.error(
               `Error eliminando video ${video.public_id} de R2:`,
-              error
+              error,
             );
-          })
+          }),
       ) || [];
 
     await Promise.all([...deleteImagePromises, ...deleteVideoPromises]);
@@ -120,6 +120,7 @@ export const getEvasByProvince = async (req, res) => {
     const evas = await Eva.find({
       "detailLocation.province": province,
       isActive: true,
+      status: "approved",
     });
     res.json(evas);
   } catch (error) {
@@ -128,49 +129,17 @@ export const getEvasByProvince = async (req, res) => {
   }
 };
 
-/* export const deleteOneImage = async (req, res) => {
-  const { img: public_id } = req.params;
-
+export const approveEva = async (req, res) => {
   try {
-    if (!public_id) {
-      return res
-        .status(400)
-        .json({ message: "Falta el public_id de la imagen" });
-    }
-
-    await deleteImage(public_id);
-
-    await Eva.updateMany(
-      { "images.public_id": public_id },
-      { $pull: { images: { public_id: public_id } } }
+    const eva = await Eva.findByIdAndUpdate(
+      req.params.id,
+      { status: "approved" },
+      { new: true },
     );
-
-    return res.status(200).json({ message: "Imagen eliminada correctamente" });
+    if (!eva) return res.status(404).json({ message: "Eva not found" });
+    res.json(eva);
   } catch (error) {
-    console.error("Error al procesar la eliminación de la imagen:", error);
-    return res.status(500).json({ message: "Error al eliminar la imagen" });
+    console.error(error);
+    res.status(500).json({ message: error.message });
   }
 };
-
-export const deleteOneVideo = async (req, res) => {
-  const { video: public_id } = req.params;
-
-  try {
-    if (!public_id) {
-      return res.status(400).json({ message: "Falta el public_id del video" });
-    }
-
-    await deleteVideo(public_id);
-
-    await Eva.updateMany(
-      { "videos.public_id": public_id },
-      { $pull: { videos: { public_id: public_id } } }
-    );
-
-    return res.status(200).json({ message: "Video eliminado correctamente" });
-  } catch (error) {
-    console.error("Error al procesar la eliminación del video:", error);
-    return res.status(500).json({ message: "Error al eliminar el video" });
-  }
-};
- */

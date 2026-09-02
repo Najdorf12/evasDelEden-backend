@@ -21,16 +21,17 @@ const evaSchema = new Schema(
       horario: { type: String },
       extendDescription: { type: String },
     },
-    owner: {
-      type: Schema.Types.ObjectId,
-      ref: "Modelo",
-      default: null,
+    owner: { type: Schema.Types.ObjectId, ref: "Modelo", default: null },
+    status: {
+      type: String,
+      enum: ["approved", "pending"],
+      default: "approved", 
     },
     images: [{ public_id: { type: String }, secure_url: { type: String } }],
     videos: [{ public_id: { type: String }, secure_url: { type: String } }],
     date: { type: Date, default: Date.now },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 export default mongoose.model("Eva", evaSchema);

@@ -5,9 +5,8 @@ import { uploadImage, deleteImage, uploadVideo, deleteVideo } from '../controlle
 const router = Router();
 
 router.post('/image', uploadSingleImage, uploadImage);
-router.delete('/image/:public_id', deleteImage);
-
 router.post('/video', uploadSingleVideo, uploadVideo);
-router.delete('/video/:public_id', deleteVideo);
+router.delete("/image", deleteImage);
+router.delete("/video", deleteVideo);
 
 export default router;
