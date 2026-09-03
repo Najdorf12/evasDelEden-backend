@@ -90,11 +90,13 @@ export const deleteEva = async (req, res) => {
     });
   }
 };
-const filterExpiredStories = (eva) => {
+const filterPublicStories = (eva) => {
   if (!eva) return eva;
   const obj = eva.toObject ? eva.toObject() : eva;
   obj.stories = (obj.stories || []).filter(
-    (s) => !s.expiresAt || new Date(s.expiresAt) > new Date(),
+    (s) =>
+      s.status === "approved" &&
+      (!s.expiresAt || new Date(s.expiresAt) > new Date()),
   );
   return obj;
 };
@@ -103,7 +105,7 @@ export const getEva = async (req, res) => {
   try {
     const eva = await Eva.findById(req.params.id);
     if (!eva) return res.status(404).json({ message: "Eva not found" });
-    res.json(filterExpiredStories(eva));
+    res.json(filterPublicStories(eva));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -130,7 +132,7 @@ export const getEvasByProvince = async (req, res) => {
       isActive: true,
       status: "approved",
     });
-    res.json(evas);
+    res.json(evas.map(filterPublicStories));
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: error.message });
@@ -253,6 +255,54 @@ export const setEvaCoverImage = async (req, res) => {
     res.json(eva);
   } catch (error) {
     console.error("Error seteando portada:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const approveEvaStory = async (req, res) => {
+  try {
+    const { id, storyId } = req.params;
+    const eva = await Eva.findById(id);
+    if (!eva) return res.status(404).json({ message: "Eva no encontrada" });
+
+    const story = eva.stories.id(storyId);
+    if (!story) {
+      return res.status(404).json({ message: "Historia no encontrada" });
+    }
+
+    story.status = "approved";
+    await eva.save();
+
+    res.json(eva);
+  } catch (error) {
+    console.error("Error aprobando historia:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const rejectEvaStory = async (req, res) => {
+  try {
+    const { id, storyId } = req.params;
+    const eva = await Eva.findById(id);
+    if (!eva) return res.status(404).json({ message: "Eva no encontrada" });
+
+    const story = eva.stories.id(storyId);
+    if (!story) {
+      return res.status(404).json({ message: "Historia no encontrada" });
+    }
+
+    if (story.type === "video") {
+      await deleteVideoFromR2(story.public_id);
+    } else {
+      await deleteImageFromR2(story.public_id);
+    }
+
+    story.deleteOne();
+    await eva.save();
+
+    res.json(eva);
+  } catch (error) {
+    console.error("Error rechazando historia:", error);
     res.status(500).json({ message: error.message });
   }
 };

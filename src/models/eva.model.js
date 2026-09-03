@@ -34,6 +34,11 @@ const evaSchema = new Schema(
         public_id: { type: String },
         secure_url: { type: String },
         type: { type: String, enum: ["image", "video"], default: "image" },
+        status: {
+          type: String,
+          enum: ["approved", "pending"],
+          default: "pending",
+        },
         createdAt: { type: Date, default: Date.now },
         expiresAt: { type: Date },
       },
