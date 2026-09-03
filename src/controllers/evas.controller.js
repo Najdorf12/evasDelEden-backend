@@ -90,12 +90,20 @@ export const deleteEva = async (req, res) => {
     });
   }
 };
+const filterExpiredStories = (eva) => {
+  if (!eva) return eva;
+  const obj = eva.toObject ? eva.toObject() : eva;
+  obj.stories = (obj.stories || []).filter(
+    (s) => !s.expiresAt || new Date(s.expiresAt) > new Date(),
+  );
+  return obj;
+};
 
 export const getEva = async (req, res) => {
-  const eva = await Eva.findById(req.params.id);
   try {
+    const eva = await Eva.findById(req.params.id);
     if (!eva) return res.status(404).json({ message: "Eva not found" });
-    res.json(eva);
+    res.json(filterExpiredStories(eva));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

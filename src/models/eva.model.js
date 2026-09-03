@@ -25,13 +25,22 @@ const evaSchema = new Schema(
     status: {
       type: String,
       enum: ["approved", "pending"],
-      default: "approved", 
+      default: "approved",
     },
     images: [{ public_id: { type: String }, secure_url: { type: String } }],
     videos: [{ public_id: { type: String }, secure_url: { type: String } }],
+    stories: [
+      {
+        public_id: { type: String },
+        secure_url: { type: String },
+        type: { type: String, enum: ["image", "video"], default: "image" },
+        createdAt: { type: Date, default: Date.now },
+        expiresAt: { type: Date },
+      },
+    ],
     date: { type: Date, default: Date.now },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.model("Eva", evaSchema);

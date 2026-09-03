@@ -1,6 +1,7 @@
 import Eva from "../models/eva.model.js";
 import Modelo from "../models/modelo.model.js";
 import { deleteImageFromR2, deleteVideoFromR2 } from "../libs/r2-service.js";
+const STORY_DURATION_MS = 24 * 60 * 60 * 1000; 
 
 export const getMyEva = async (req, res) => {
   try {
@@ -224,6 +225,73 @@ export const setMyEvaCoverImage = async (req, res) => {
     res.json(eva);
   } catch (error) {
     console.error("Error seteando portada:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const addMyEvaStory = async (req, res) => {
+  try {
+    const { public_id, secure_url, type } = req.body;
+    if (!public_id || !secure_url) {
+      return res.status(400).json({ message: "Faltan datos de la historia" });
+    }
+
+    const eva = await Eva.findOne({ owner: req.modelo.id });
+    if (!eva) {
+      return res.status(404).json({ message: "No tenés un perfil cargado" });
+    }
+
+    eva.stories.push({
+      public_id,
+      secure_url,
+      type: type === "video" ? "video" : "image",
+      createdAt: new Date(),
+      expiresAt: new Date(Date.now() + STORY_DURATION_MS),
+    });
+
+    await eva.save();
+    res.json(eva);
+  } catch (error) {
+    console.error("Error agregando historia:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const deleteMyEvaStory = async (req, res) => {
+  try {
+    const { public_id } = req.query;
+    if (!public_id) {
+      return res.status(400).json({ message: "Falta public_id" });
+    }
+
+    const eva = await Eva.findOne({ owner: req.modelo.id });
+    if (!eva) {
+      return res.status(404).json({ message: "No tenés un perfil cargado" });
+    }
+
+    const exists = eva.stories.some((s) => s.public_id === public_id);
+    if (!exists) {
+      return res
+        .status(404)
+        .json({ message: "Esa historia no pertenece a tu perfil" });
+    }
+
+    const story = eva.stories.find((s) => s.public_id === public_id);
+    if (story.type === "video") {
+      await deleteVideoFromR2(public_id);
+    } else {
+      await deleteImageFromR2(public_id);
+    }
+
+    const updated = await Eva.findByIdAndUpdate(
+      eva._id,
+      { $pull: { stories: { public_id } } },
+      { new: true },
+    );
+
+    res.json(updated);
+  } catch (error) {
+    console.error("Error eliminando historia:", error);
     res.status(500).json({ message: error.message });
   }
 };
