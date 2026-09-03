@@ -70,6 +70,7 @@ export const updateMyEva = async (req, res) => {
       videos,
       isActive,
     } = req.body;
+
     const updated = await Eva.findByIdAndUpdate(
       eva._id,
       {
@@ -81,7 +82,6 @@ export const updateMyEva = async (req, res) => {
         images,
         videos,
         isActive,
-        status: "pending",
       },
       { new: true },
     );
