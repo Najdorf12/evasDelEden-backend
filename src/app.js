@@ -8,6 +8,7 @@ import emailRoutes from "./routes/email.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
 import modeloAuthRoutes from "./routes/modeloAuth.routes.js";
 import evaModeloRoutes from "./routes/evaModelo.routes.js";
+import commentRoutes from "./routes/comment.routes.js";
 import compression from "compression";
 
 const app = express();
@@ -81,5 +82,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/send-email", emailRoutes);
 app.use("/api/modelo-auth", modeloAuthRoutes);
 app.use("/api/eva-modelo", evaModeloRoutes);
+app.use("/api/comments", commentRoutes);
 
 export default app;
