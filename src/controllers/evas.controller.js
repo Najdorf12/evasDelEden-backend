@@ -213,3 +213,38 @@ export const deleteEvaVideo = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const setEvaCoverImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { public_id } = req.body;
+    if (!public_id) {
+      return res.status(400).json({ message: "Falta public_id" });
+    }
+
+    const eva = await Eva.findById(id);
+    if (!eva) {
+      return res.status(404).json({ message: "Eva no encontrada" });
+    }
+
+    const index = eva.images.findIndex((img) => img.public_id === public_id);
+    if (index === -1) {
+      return res
+        .status(404)
+        .json({ message: "Esa imagen no pertenece a esta Eva" });
+    }
+
+    if (index === 0) {
+      return res.json(eva);
+    }
+
+    const [cover] = eva.images.splice(index, 1);
+    eva.images.unshift(cover);
+    await eva.save();
+
+    res.json(eva);
+  } catch (error) {
+    console.error("Error seteando portada:", error);
+    res.status(500).json({ message: error.message });
+  }
+};

@@ -193,3 +193,37 @@ export const deleteMyEvaVideo = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+export const setMyEvaCoverImage = async (req, res) => {
+  try {
+    const { public_id } = req.body;
+    if (!public_id) {
+      return res.status(400).json({ message: "Falta public_id" });
+    }
+
+    const eva = await Eva.findOne({ owner: req.modelo.id });
+    if (!eva) {
+      return res.status(404).json({ message: "No tenés un perfil cargado" });
+    }
+
+    const index = eva.images.findIndex((img) => img.public_id === public_id);
+    if (index === -1) {
+      return res
+        .status(404)
+        .json({ message: "Esa imagen no pertenece a tu perfil" });
+    }
+
+    // Ya es la portada, no hace falta hacer nada
+    if (index === 0) {
+      return res.json(eva);
+    }
+
+    const [cover] = eva.images.splice(index, 1);
+    eva.images.unshift(cover);
+    await eva.save();
+
+    res.json(eva);
+  } catch (error) {
+    console.error("Error seteando portada:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
