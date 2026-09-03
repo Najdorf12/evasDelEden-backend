@@ -4,6 +4,8 @@ import {
   createMyEva,
   updateMyEva,
   deleteMyEva,
+  deleteMyEvaImage,
+  deleteMyEvaVideo,
 } from "../controllers/evaModelo.controller.js";
 import { modeloAuthRequired } from "../middlewares/validateModeloToken.js";
 
@@ -13,5 +15,7 @@ router.get("/me", modeloAuthRequired, getMyEva);
 router.post("/", modeloAuthRequired, createMyEva);
 router.put("/", modeloAuthRequired, updateMyEva);
 router.delete("/", modeloAuthRequired, deleteMyEva);
+router.delete("/image", modeloAuthRequired, deleteMyEvaImage);
+router.delete("/video", modeloAuthRequired, deleteMyEvaVideo);
 
 export default router;

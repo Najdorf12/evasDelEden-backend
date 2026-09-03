@@ -26,12 +26,10 @@ export const createMyEva = async (req, res) => {
   try {
     const existing = await Eva.findOne({ owner: req.modelo.id });
     if (existing) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Ya tenés un perfil cargado. Usá editar en vez de crear uno nuevo.",
-        });
+      return res.status(400).json({
+        message:
+          "Ya tenés un perfil cargado. Usá editar en vez de crear uno nuevo.",
+      });
     }
     const newEva = new Eva({
       name,
@@ -124,6 +122,74 @@ export const deleteMyEva = async (req, res) => {
     res.json({ message: "Perfil eliminado correctamente" });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const deleteMyEvaImage = async (req, res) => {
+  try {
+    const { public_id } = req.query;
+    if (!public_id) {
+      return res.status(400).json({ message: "Falta public_id" });
+    }
+
+    const eva = await Eva.findOne({ owner: req.modelo.id });
+    if (!eva) {
+      return res.status(404).json({ message: "No tenés un perfil cargado" });
+    }
+
+    const exists = eva.images.some((img) => img.public_id === public_id);
+    if (!exists) {
+      return res
+        .status(404)
+        .json({ message: "Esa imagen no pertenece a tu perfil" });
+    }
+
+    await deleteImageFromR2(public_id);
+
+    const updated = await Eva.findByIdAndUpdate(
+      eva._id,
+      { $pull: { images: { public_id } } },
+      { new: true },
+    );
+
+    res.json(updated);
+  } catch (error) {
+    console.error("Error eliminando imagen de mi eva:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const deleteMyEvaVideo = async (req, res) => {
+  try {
+    const { public_id } = req.query;
+    if (!public_id) {
+      return res.status(400).json({ message: "Falta public_id" });
+    }
+
+    const eva = await Eva.findOne({ owner: req.modelo.id });
+    if (!eva) {
+      return res.status(404).json({ message: "No tenés un perfil cargado" });
+    }
+
+    const exists = eva.videos.some((v) => v.public_id === public_id);
+    if (!exists) {
+      return res
+        .status(404)
+        .json({ message: "Ese video no pertenece a tu perfil" });
+    }
+
+    await deleteVideoFromR2(public_id);
+
+    const updated = await Eva.findByIdAndUpdate(
+      eva._id,
+      { $pull: { videos: { public_id } } },
+      { new: true },
+    );
+
+    res.json(updated);
+  } catch (error) {
+    console.error("Error eliminando video de mi eva:", error);
     res.status(500).json({ message: error.message });
   }
 };

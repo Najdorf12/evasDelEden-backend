@@ -143,3 +143,73 @@ export const approveEva = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const deleteEvaImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { public_id } = req.query;
+    if (!public_id) {
+      return res.status(400).json({ message: "Falta public_id" });
+    }
+
+    const eva = await Eva.findById(id);
+    if (!eva) {
+      return res.status(404).json({ message: "Eva no encontrada" });
+    }
+
+    const exists = eva.images.some((img) => img.public_id === public_id);
+    if (!exists) {
+      return res
+        .status(404)
+        .json({ message: "Esa imagen no pertenece a esta Eva" });
+    }
+
+    await deleteImageFromR2(public_id);
+
+    const updated = await Eva.findByIdAndUpdate(
+      id,
+      { $pull: { images: { public_id } } },
+      { new: true },
+    );
+
+    res.json(updated);
+  } catch (error) {
+    console.error("Error eliminando imagen de eva:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const deleteEvaVideo = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { public_id } = req.query;
+    if (!public_id) {
+      return res.status(400).json({ message: "Falta public_id" });
+    }
+
+    const eva = await Eva.findById(id);
+    if (!eva) {
+      return res.status(404).json({ message: "Eva no encontrada" });
+    }
+
+    const exists = eva.videos.some((v) => v.public_id === public_id);
+    if (!exists) {
+      return res
+        .status(404)
+        .json({ message: "Ese video no pertenece a esta Eva" });
+    }
+
+    await deleteVideoFromR2(public_id);
+
+    const updated = await Eva.findByIdAndUpdate(
+      id,
+      { $pull: { videos: { public_id } } },
+      { new: true },
+    );
+
+    res.json(updated);
+  } catch (error) {
+    console.error("Error eliminando video de eva:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
