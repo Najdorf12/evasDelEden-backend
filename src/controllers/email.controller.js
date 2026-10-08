@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 /* https://myaccount.google.com/apppasswords?rapt=AEjHL4M-X7_hyt8rSn3zAV5ew0dc6oG72mm6eX8RXgOMoXzVQZ34loZTT5B5WeP1lmAAEf2LWDSbJw602Jwv7L98D56ygnScyTtof2rpvTt1cJKyaYYRlyI */
+
 const EMAIL_USER = "agustin.morro@gmail.com";
 const EMAIL_PASS = "qzaw lgru coge pyxn";
 
@@ -18,7 +19,7 @@ export const sendEmail = async (req, res) => {
   try {
     await transporter.sendMail({
       from: `"Evas del Eden"<${EMAIL_USER}>`,
-      to: "agustin.morro@gmail.com",/* evaseden@protonmail.com */
+      to: "agustin.morro@gmail.com",/* evaseden@protonmail.com*/
       subject: `Consulta de ${email} / EVAS DEL EDEN /`,
       html: `
         <h1>Detalles del contacto:</h1>
