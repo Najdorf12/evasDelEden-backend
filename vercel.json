@@ -1,3 +1,4 @@
+
 {
   "version": 2,
   "builds": [
@@ -8,8 +9,7 @@
         "maxLambdaSize": "50mb",
         "memory": 3008,
         "includeFiles": [
-          "uploads/**",
-          "node_modules/**"
+          "uploads/**"
         ]
       }
     }
@@ -18,7 +18,15 @@
     {
       "src": "/api/(.*)",
       "dest": "index.js",
-      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"]
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "OPTIONS",
+        "PATCH",
+        "HEAD"
+      ]
     }
   ],
   "headers": [
@@ -47,12 +55,6 @@
         }
       ]
     }
-  ],
-  "functions": {
-    "api/**/*.js": {
-      "memory": 3008,
-      "maxDuration": 60,
-      "includeFiles": "uploads/**"
-    }
-  }
+  ]
 }
+
