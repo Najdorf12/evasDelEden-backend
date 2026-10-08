@@ -1,8 +1,9 @@
 import nodemailer from "nodemailer";
+
 /* https://myaccount.google.com/apppasswords?rapt=AEjHL4M-X7_hyt8rSn3zAV5ew0dc6oG72mm6eX8RXgOMoXzVQZ34loZTT5B5WeP1lmAAEf2LWDSbJw602Jwv7L98D56ygnScyTtof2rpvTt1cJKyaYYRlyI */
 
-const EMAIL_USER = "agustin.morro@gmail.com";
-const EMAIL_PASS = "qzaw lgru coge pyxn";
+const EMAIL_USER = "agustin.morro@gmail.com"
+const EMAIL_PASS = "qzaw lgru coge pyxn"
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -13,13 +14,13 @@ const transporter = nodemailer.createTransport({
 });
 
 export const sendEmail = async (req, res) => {
-  console.log("Datos recibidos:", req.body); // Log para depuración
+  console.log("Datos recibidos:", req.body); 
   const { email, wttp, message } = req.body;
-
+ /* evaseden@protonmail.com*/
   try {
     await transporter.sendMail({
       from: `"Evas del Eden"<${EMAIL_USER}>`,
-      to: "agustin.morro@gmail.com",/* evaseden@protonmail.com*/
+      to: "agustin.morro@gmail.com",
       subject: `Consulta de ${email} / EVAS DEL EDEN /`,
       html: `
         <h1>Detalles del contacto:</h1>
