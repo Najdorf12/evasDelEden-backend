@@ -54,11 +54,5 @@
       "maxDuration": 60,
       "includeFiles": "uploads/**"
     }
-  },
-  "limits": {
-    "bodySize": "120mb",
-    "external": {
-      "size": "120mb"
-    }
   }
 }
