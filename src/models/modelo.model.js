@@ -21,10 +21,12 @@ const modeloSchema = new Schema(
       ref: "Eva",
       default: null,
     },
+    passwordResetToken: { type: String, select: false },
+    passwordResetExpires: { type: Date, select: false },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export default mongoose.model("Modelo", modeloSchema);

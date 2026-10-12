@@ -1,32 +1,35 @@
-import nodemailer from "nodemailer";
+import { sendMail } from "../services/mail.service.js";
 
-/* https://myaccount.google.com/apppasswords?rapt=AEjHL4M-X7_hyt8rSn3zAV5ew0dc6oG72mm6eX8RXgOMoXzVQZ34loZTT5B5WeP1lmAAEf2LWDSbJw602Jwv7L98D56ygnScyTtof2rpvTt1cJKyaYYRlyI */
+// Adónde llegan las consultas del formulario de contacto
+const CONTACT_TO = process.env.CONTACT_TO || "agustin.morro@gmail.com";
 
-const EMAIL_USER = "agustin.morro@gmail.com"
-const EMAIL_PASS = "qzaw lgru coge pyxn"
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-      user: EMAIL_USER, 
-      pass: EMAIL_PASS 
-  }
-});
+const escapeHtml = (value = "") =>
+  String(value).replace(
+    /[&<>"']/g,
+    (char) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[char],
+  );
 
 export const sendEmail = async (req, res) => {
-  console.log("Datos recibidos:", req.body); 
-  const { email, wttp, message } = req.body;
- /* evaseden@protonmail.com*/
+  console.log("Datos recibidos:", req.body);
+  const { email, wttp, message } = req.body || {};
+
   try {
-    await transporter.sendMail({
-      from: `"Evas del Eden"<${EMAIL_USER}>`,
-      to: "agustin.morro@gmail.com",
+    await sendMail({
+      to: CONTACT_TO,
+      replyTo: email,
       subject: `Consulta de ${email} / EVAS DEL EDEN /`,
       html: `
         <h1>Detalles del contacto:</h1>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>WhatsApp:</strong> ${wttp}</p>
-        <p><strong>Mensaje:</strong> ${message}</p>
+        <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+        <p><strong>WhatsApp:</strong> ${escapeHtml(wttp)}</p>
+        <p><strong>Mensaje:</strong> ${escapeHtml(message).replace(/\n/g, "<br>")}</p>
       `,
     });
 

@@ -74,7 +74,7 @@ app.use((req, res, next) => {
 app.use(morgan("dev"));
 app.use(compression());
 app.use(cookieParser());
-
+app.set("trust proxy", 1);
 // Rutas
 app.use("/api/upload", uploadRoutes);
 app.use("/api/evas", evasRoutes);
