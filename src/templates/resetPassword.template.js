@@ -1,4 +1,3 @@
-/* Ubicación sugerida: backend/templates/resetPassword.template.js */
 
 const escapeHtml = (value = "") =>
   String(value).replace(
