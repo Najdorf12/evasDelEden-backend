@@ -44,11 +44,10 @@ app.get("/health", (req, res) => res.status(200).send("ok"));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(cookieParser());
 
-// Límite grande SOLO donde se suben archivos/imágenes
 const bigJson = express.json({ limit: "120mb" });
-app.use("/api/upload", uploadRoutes);
-app.use("/api/eva-modelo", evaModeloRoutes); // ver nota abajo
-app.use("/api/evas", evasRoutes);            // ver nota abajo
+app.use("/api/upload", bigJson, uploadRoutes);
+app.use("/api/eva-modelo", bigJson, evaModeloRoutes);
+app.use("/api/evas", bigJson, evasRoutes)    
 
 // Resto de rutas: límite chico
 app.use(express.json({ limit: "2mb" }));
