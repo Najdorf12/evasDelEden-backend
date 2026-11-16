@@ -1,29 +1,27 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-const EMAIL_USER = "agustin.morro@gmail.com"
-const EMAIL_PASS = "qzaw lgru coge pyxn"
-const EMAIL_FROM_NAME = "Evas del Eden";
+let client;
 
-if (!EMAIL_USER || !EMAIL_PASS) {
-  console.warn(
-    "⚠️  Faltan EMAIL_USER / EMAIL_PASS: el envío de mails no va a funcionar.",
-  );
-}
+const getClient = () => {
+  if (!client) {
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error("Falta la variable RESEND_API_KEY");
+    }
+    client = new Resend(process.env.RESEND_API_KEY);
+  }
+  return client;
+};
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: { user: EMAIL_USER, pass: EMAIL_PASS },
-  // Timeouts cortos: si el hosting bloquea SMTP, falla rápido en vez de colgarse
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 15000,
-});
+const getFrom = () => {
+  const name = process.env.MAIL_FROM_NAME || "Evas del Eden";
+  const email = process.env.MAIL_FROM_EMAIL || "no-reply@evasdeleden.com";
+  return `${name} <${email}>`;
+};
 
-export const sendMail = ({ to, subject, html, text, replyTo }) =>
-  transporter.sendMail({
-    from: `"${EMAIL_FROM_NAME}" <${EMAIL_USER}>`,
+export const sendMail = async ({ to, subject, html, text, replyTo }) => {
+  // Resend no lanza excepción: devuelve { data, error }
+  const { data, error } = await getClient().emails.send({
+    from: getFrom(),
     to,
     subject,
     html,
@@ -31,14 +29,21 @@ export const sendMail = ({ to, subject, html, text, replyTo }) =>
     replyTo,
   });
 
-// Sirve para comprobar la conexión con Gmail (ej. al iniciar el servidor)
+  if (error) {
+    const err = new Error(error.message);
+    err.name = error.name;
+    err.statusCode = error.statusCode;
+    throw err;
+  }
+  return data;
+};
+
+// Resend no tiene "verify": solo comprobamos que esté la key
 export const verifyMailConnection = async () => {
-  try {
-    await transporter.verify();
-    console.log("✅ Servicio de mail listo");
-    return true;
-  } catch (error) {
-    console.error("❌ No se pudo conectar con el servicio de mail:", error.message);
+  if (!process.env.RESEND_API_KEY) {
+    console.error("❌ Falta RESEND_API_KEY: el envío de mails no va a funcionar.");
     return false;
   }
+  console.log("✅ Servicio de mail configurado (Resend)");
+  return true;
 };
