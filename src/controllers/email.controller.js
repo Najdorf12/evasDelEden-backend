@@ -19,12 +19,16 @@ const escapeHtml = (value = "") =>
   );
 
 export const sendEmail = async (req, res) => {
-  console.log("Datos recibidos:", req.body);
-  const { email, wttp, message } = req.body || {};
+ const to = process.env.CONTACT_TO;
+  if (!to) {
+    console.error("Falta CONTACT_TO");
+    return res.status(500).json({ error: "Error al enviar el correo" });
+  }
 
+  const { email, wttp, message } = req.body || {};
   try {
     await sendMail({
-      to: CONTACT_TO,
+      to,
       replyTo: email,
       subject: `Consulta de ${email} / EVAS DEL EDEN /`,
       html: `
